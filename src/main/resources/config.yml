@@ -1,0 +1,26 @@
+# TwinGamemode config file
+
+# teleport offsets for save loading
+#
+# This is useful if you are using other plugins such as world guard
+# to change gamemodes with region flags. These plugins can be picky
+# if the player is standing right on the border and the save file changes
+# If this happens, the save file may be contaminated and duplicate
+# to both survival and creative save files.
+#
+# To prevent this from happening, you cna add a teleport offset to ensure
+# the player is at least 1 block away from the region boundary.
+#
+# Recommended value: 1.0 for axis in opposite direction of region
+#
+
+#offset when player changes to creative
+creativeTPoffset:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+#offset when player changes to survival
+survivalTPoffset:
+  x: 0.0
+  y: 0.0
+  z: 0.0
