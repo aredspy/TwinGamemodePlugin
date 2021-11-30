@@ -1,6 +1,6 @@
 name: TwinGamemode
 version: '${project.version}'
-main: me.creeperbomb.twingamemode.TwinGamemode
-api-version: 1.17
+main: me.sabre.twingamemode.TwinGamemode
+api-version: 1.18
 authors: [ 1creeperbomb ]
 description: Split a single world into a survival and creative side

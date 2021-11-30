@@ -13,15 +13,17 @@ import java.nio.file.StandardCopyOption;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.GameMode;
+import org.bukkit.util.Vector;
 
 public class GamemodeListener implements Listener{
 
-    private double Cx;
-    private double Cy;
-    private double Cz;
-    private double Sx;
-    private double Sy;
-    private double Sz;
+    final private double Cx;
+    final private double Cy;
+    final private double Cz;
+    final private double Sx;
+    final private double Sy;
+    final private double Sz;
+    final private Vector zeroVector;
 
     public GamemodeListener(FileConfiguration config) {
         this.Cx = config.getDouble("creativeTPoffset.x");
@@ -30,6 +32,7 @@ public class GamemodeListener implements Listener{
         this.Sx = config.getDouble("survivalTPoffset.x");
         this.Sy = config.getDouble("survivalTPoffset.y");
         this.Sz = config.getDouble("survivalTPoffset.z");
+        this.zeroVector = new Vector(0, 0, 0);
     }
 
     @EventHandler
@@ -82,7 +85,7 @@ public class GamemodeListener implements Listener{
                 Files.copy(save1, copy1, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
                 System.out.println("[TwinGamemode] ERROR: Failed to copy save playerdata for " + player.getName());
-                System.out.println(e);
+                e.printStackTrace();
                 return;
             }
 
@@ -95,7 +98,7 @@ public class GamemodeListener implements Listener{
                 Files.copy(update1, save1, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
                 System.out.println("[TwinGamemode] ERROR: Failed to copy load playerdata for " + player.getName());
-                System.out.println(e);
+                e.printStackTrace();
                 return;
             }
 
@@ -113,7 +116,7 @@ public class GamemodeListener implements Listener{
                 Files.copy(save1, copy1, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
                 System.out.println("[TwinGamemode] ERROR: Failed to copy save playerdata for " + player.getName());
-                System.out.println(e);
+                e.printStackTrace();
                 return;
             }
 
@@ -126,7 +129,7 @@ public class GamemodeListener implements Listener{
                 Files.copy(update1, save1, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
                 System.out.println("[TwinGamemode] ERROR: Failed to copy load playerdata for " + player.getName());
-                System.out.println(e);
+                e.printStackTrace();
                 return;
             }
 
@@ -145,5 +148,7 @@ public class GamemodeListener implements Listener{
 
         //teleport to original location with configured offset
         player.teleport(location);
+        //zero out velocity
+        player.setVelocity(zeroVector);
     }
 }
