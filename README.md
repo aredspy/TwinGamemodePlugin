@@ -1,6 +1,7 @@
 # TwinGamemode
 
 ### Play survival and creative in the same Minecraft world
+Download from the releases section on the right
 
 ## Description
 
