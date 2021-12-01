@@ -1,17 +1,25 @@
 # TwinGamemode config file
 
+#
+# It is suggested that you place the creative side offset from spawn
+# so you cn create a small buffer zone in between using other plugins
+# like world guard
+#
+
+# World Divider
+# The coord will represent z when vertical and x when horizontal
+# PAY CLOSE ATTENTION because vertical is east-west, isn't that intuitive?
+Divider:
+  type: vertical #options: vertical (east-west) | horizontal (north south)
+  coord: 0.0 #options: any coordinate in double form
+  creative: positive #options: positive (east or south) | negative (west or north)
+
 # teleport offsets for save loading
 #
-# This is useful if you are using other plugins such as world guard
-# to change gamemodes with region flags. These plugins can be picky
-# if the player is standing right on the border and the save file changes
-# If this happens, the save file may be contaminated and duplicate
-# to both survival and creative save files.
-#
-# To prevent this from happening, you cna add a teleport offset to ensure
-# the player is at least 1 block away from the region boundary.
-#
-# Recommended value: 1.0 for axis in opposite direction of region
+# Useful for easier compatibility with other plugins that check player location
+# It is also suggested you add a +1.0 offset if you experience a high volume of players and are using
+# many external plugins such as worldguard or worldedit so the plugin doesn't lag up the
+#  server checking gamemode after the player had been teleported
 #
 
 #offset when player changes to creative

@@ -1,5 +1,6 @@
 package me.sabre.twingamemode;
 
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.Location;
 import org.bukkit.event.Listener;
@@ -23,7 +24,7 @@ public class GamemodeListener implements Listener{
     final private double Sx;
     final private double Sy;
     final private double Sz;
-    final private Vector zeroVector;
+    final private Vector zeroVector; //sorta useless now but whatever lol
 
     public GamemodeListener(FileConfiguration config) {
         this.Cx = config.getDouble("creativeTPoffset.x");
@@ -152,11 +153,14 @@ public class GamemodeListener implements Listener{
         player.setVelocity(zeroVector);
     }
 
-    //bump players down if they are above y = 325
+    //bump players down to the nearest vertical block
     private static Location bumpDown(Location location) {
-        if (location.getY() > 325) {
-            location.setY(320);
+        for (double y = location.getY(); y > 0; y--) {
+            if (location.subtract(0, 1, 0).getBlock().getType() == Material.AIR)
+                continue;
+            break;
         }
-        return location;
+
+        return location.add(0, 1, 0);
     }
 }

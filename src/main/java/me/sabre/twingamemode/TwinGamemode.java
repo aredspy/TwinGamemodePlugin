@@ -24,6 +24,9 @@ public final class TwinGamemode extends JavaPlugin {
 
         //start gamemode listener
         getServer().getPluginManager().registerEvents(new GamemodeListener(this.getConfig()), this);
+
+        //start location listener
+        getServer().getPluginManager().registerEvents(new LocationListener(this.getConfig()), this);
         
         System.out.println("[TwinGamemode] Has successfully started!");
     }
