@@ -139,8 +139,8 @@ public class GamemodeListener implements Listener{
         //debug
         //System.out.println("[TwinGamemode] Successfully swapped save files!");
 
-        //current location
-        Location location = player.getLocation();
+        //current location + run down bumper
+        Location location = bumpDown(player.getLocation());
         location.add(offset);
 
         //load new player data
@@ -150,5 +150,13 @@ public class GamemodeListener implements Listener{
         player.teleport(location);
         //zero out velocity
         player.setVelocity(zeroVector);
+    }
+
+    //bump players down if they are above y = 325
+    private static Location bumpDown(Location location) {
+        if (location.getY() > 325) {
+            location.setY(320);
+        }
+        return location;
     }
 }
