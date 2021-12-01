@@ -36,14 +36,14 @@ survivalTPoffset:
   z: 0.0
 ```
 
-##Extra
+## Extra
 
-###Revision
+### Revision
 - Version: 1.1.1
 - Spigot-API: 1.18 (latest)
 - Tested on: Spigot 1.18 (latest)
 
-###Changelog
+### Changelog
 
 **Version 1.1.1**
 - Added new internal location listener
@@ -54,11 +54,11 @@ survivalTPoffset:
 - Cleaned up namespace
 - Added pseudo Y axis bumper
 
-###Planned Features for the Future
+### Planned Features for the Future
 - Ability to disable builtin location listener
 - Automatic backups for save files
 
-###Build
+### Build
 Clone repository and build with your favorite Java IDE 
 (or use the command line if you're still a nerd who uses Java). 
 Make sure to use maven to pull the latest libraries from Spigot. 
