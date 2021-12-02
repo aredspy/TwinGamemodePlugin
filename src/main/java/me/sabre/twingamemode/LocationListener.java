@@ -32,6 +32,11 @@ public class LocationListener implements Listener{
         Location location = player.getLocation();
         GameMode gamemode = player.getGameMode();
 
+        //ignore for operators
+        if (player.isOp()) {
+            return;
+        }
+
         //check if location is in creative zone
         double crossCoord;
 
