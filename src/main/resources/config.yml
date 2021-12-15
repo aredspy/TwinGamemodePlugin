@@ -1,34 +1,28 @@
 # TwinGamemode config file
 
-#
-# It is suggested that you place the creative side offset from spawn
-# so you cn create a small buffer zone in between using other plugins
-# like world guard
-#
+#list of worlds to apply divider and game mode changers
+worlds:
+  - level:
+      name: "world"
+      divider:
+        #options: vertical (east-west) | horizontal (north south)
+        type: vertical
+        #options: any coordinate in double form
+        coord: 0.0
+        #options: positive (east or south) | negative (west or north)
+        creative: positive
+        #offset when player changes game mode
+        offset: 0.0
+  - level:
+      name: "world_nether"
+      divider:
+        #options: vertical (east-west) | horizontal (north south)
+        type: vertical
+        #options: any coordinate in double form
+        coord: 0.0
+        #options: positive (east or south) | negative (west or north)
+        creative: positive
+        #offset when player changes game mode
+        offset: 0.0
 
-# World Divider
-# The coord will represent z when vertical and x when horizontal
-# PAY CLOSE ATTENTION because vertical is east-west, isn't that intuitive?
-Divider:
-  type: vertical #options: vertical (east-west) | horizontal (north south)
-  coord: 0.0 #options: any coordinate in double form
-  creative: positive #options: positive (east or south) | negative (west or north)
 
-# teleport offsets for save loading
-#
-# Useful for easier compatibility with other plugins that check player location
-# It is also suggested you add a +1.0 offset if you experience a high volume of players and are using
-# many external plugins such as worldguard or worldedit so the plugin doesn't lag up the
-#  server checking gamemode after the player had been teleported
-#
-
-#offset when player changes to creative
-creativeTPoffset:
-  x: 0.0
-  y: 0.0
-  z: 0.0
-#offset when player changes to survival
-survivalTPoffset:
-  x: 0.0
-  y: 0.0
-  z: 0.0

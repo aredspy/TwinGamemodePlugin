@@ -4,3 +4,8 @@ main: me.sabre.twingamemode.TwinGamemode
 api-version: 1.18
 authors: [ 1creeperbomb ]
 description: Split a single world into a survival and creative side
+commands:
+  twg_generate:
+    description: Generate the TwinGamemode divider on already generated chunks
+    usage: /twg_generate
+    permission: TwinGamemode.admin
