@@ -23,66 +23,12 @@ import java.util.logging.Logger;
 
 public class LocationListener2 implements Listener{
 
-    private class TWGWorld {
+    private ArrayList<TWGWorld> worlds;
+    final private FileConfiguration config;
 
-        final public World world;
-        final public double coord;
-        final public double offset;
-        final public boolean vertical;
-        final public boolean positive;
-        final public double cOffset;
-        final public double sOffset;
-
-        public TWGWorld(World world, double coord, double offset, boolean vert, boolean cpos) {
-            this.world = world;
-            this.coord = coord;
-            this.offset = offset;
-            this.vertical = vert;
-            this.positive = cpos;
-
-            if (this.positive) {
-                this.cOffset = offset;
-                this.sOffset = -offset;
-            } else {
-                this.cOffset = -offset;
-                this.sOffset = offset;
-            }
-        }
-    }
-
-    final private ArrayList<TWGWorld> worlds;
-
-    public LocationListener2(FileConfiguration config) {
-
-        Logger logger =  PaperPluginLogger.getLogger("TWG");
-
-        //init worlds
-        worlds = new ArrayList<>();
-        List<Map<?,?>> worlds = config.getMapList("worlds");
-
-        try {
-
-            for (Map<?, ?> map : worlds) {
-                Map<String, ?> world = (Map<String, ?>) map.get("level");
-                String worldname = (String) world.get("name");
-
-                Map<String, ?> divider = (Map<String, ?>) world.get("divider");
-                double coord = (double) divider.get("coord");
-                double offset = (double) divider.get("offset");
-                boolean vert = divider.get("type").equals("vertical");
-                boolean cpos = divider.get("creative").equals("positive");
-
-                World worldObj = Bukkit.getWorld(worldname);
-
-                TWGWorld worldW = new TWGWorld(worldObj, coord, offset, vert, cpos);
-                this.worlds.add(worldW);
-            }
-
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "[TwinGamemode] Failed to load config!");
-            logger.throwing("LocationListener2", "LocationListener2()", e);
-        }
-
+    public LocationListener2(ArrayList<TWGWorld> worlds, FileConfiguration config) {
+        this.worlds = worlds;
+        this.config = config;
     }
 
     @EventHandler (priority = EventPriority.HIGHEST)
@@ -100,6 +46,12 @@ public class LocationListener2 implements Listener{
 
         //ignore if not in config worlds
         for(TWGWorld w : this.worlds) {
+
+            //null check
+            while (w.world == null) {
+                w.updateWorlds();
+            }
+
             if (w.world.equals(world)) {
 
                 //check position n stuff
@@ -116,29 +68,30 @@ public class LocationListener2 implements Listener{
                 if (w.positive) {
                     if(crossCoord > w.coord) {
                         if(gamemode != GameMode.CREATIVE) {
-                            player.setGameMode(GameMode.CREATIVE);
                             //swap save
-                            swapSave(player, w, gamemode);
+                            swapSave(player, w, GameMode.CREATIVE);
+                            player.setGameMode(GameMode.CREATIVE);
                         }
                     } else {
                         if (gamemode != GameMode.SURVIVAL) {
-                            player.setGameMode(GameMode.SURVIVAL);
                             //swap save
-                            swapSave(player, w, gamemode);
+                            swapSave(player, w, GameMode.SURVIVAL);
+                            player.setGameMode(GameMode.SURVIVAL);
                         }
                     }
                 }else {
                     if(crossCoord < w.coord) {
                         if(gamemode != GameMode.CREATIVE) {
-                            player.setGameMode(GameMode.CREATIVE);
                             //swap save
-                            swapSave(player, w, gamemode);
+                            swapSave(player, w, GameMode.CREATIVE);
+                            player.setGameMode(GameMode.CREATIVE);
+
                         }
                     } else {
                         if (gamemode != GameMode.SURVIVAL) {
-                            player.setGameMode(GameMode.SURVIVAL);
                             //swap save
-                            swapSave(player, w, gamemode);
+                            swapSave(player, w, GameMode.SURVIVAL);
+                            player.setGameMode(GameMode.SURVIVAL);
                         }
                     }
                 }
@@ -194,7 +147,7 @@ public class LocationListener2 implements Listener{
                 Files.copy(save, copy, StandardCopyOption.REPLACE_EXISTING);
                 Files.copy(save1, copy1, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[TwinGamemode] ERROR: Failed to copy save playerdata for " + player.getName());
+                logger.log(Level.SEVERE, "ERROR: Failed to copy save playerdata for " + player.getName());
                 logger.throwing("LocationListener2", "swapSave()", e);
                 return;
             }
@@ -207,7 +160,7 @@ public class LocationListener2 implements Listener{
                 Files.copy(update, save, StandardCopyOption.REPLACE_EXISTING);
                 Files.copy(update1, save1, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[TwinGamemode] ERROR: Failed to copy save playerdata for " + player.getName());
+                logger.log(Level.SEVERE, "ERROR: Failed to copy save playerdata for " + player.getName());
                 logger.throwing("LocationListener2", "swapSave()", e);
                 return;
             }
@@ -222,7 +175,7 @@ public class LocationListener2 implements Listener{
                 Files.copy(save, copy, StandardCopyOption.REPLACE_EXISTING);
                 Files.copy(save1, copy1, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[TwinGamemode] ERROR: Failed to copy save playerdata for " + player.getName());
+                logger.log(Level.SEVERE, "ERROR: Failed to copy save playerdata for " + player.getName());
                 logger.throwing("LocationListener2", "swapSave()", e);
                 return;
             }
@@ -235,7 +188,7 @@ public class LocationListener2 implements Listener{
                 Files.copy(update, save, StandardCopyOption.REPLACE_EXISTING);
                 Files.copy(update1, save1, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "[TwinGamemode] ERROR: Failed to copy save playerdata for " + player.getName());
+                logger.log(Level.SEVERE, "ERROR: Failed to copy save playerdata for " + player.getName());
                 logger.throwing("LocationListener2", "swapSave()", e);
                 return;
             }
@@ -244,7 +197,7 @@ public class LocationListener2 implements Listener{
 
         //current location + run down bumper
         Location location = bumpDown(player.getLocation());
-        location.add(offset);
+        location.add(offset); //!
 
         //load new player data
         player.loadData();

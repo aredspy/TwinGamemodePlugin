@@ -1,0 +1,111 @@
+import org.bukkit.Chunk;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
+
+
+    @Override
+    public void generateCaves(@NotNull WorldInfo worldInfo, @NotNull Random random, int x, int z, @NotNull ChunkData chunkData) {
+        Logger logger = PaperPluginLogger.getLogger("TWG");
+        logger.log(Level.SEVERE, "CALLED");
+    }
+
+//use last generator to overwrite air with walls
+    //NOTE: Consider implementing the same vanilla generator and then
+    // the wall builder to possibly increase performance
+    @Override
+    public void generateBedrock(@NotNull WorldInfo worldInfo, @NotNull Random random, int x, int z, @NotNull ChunkData chunk) {
+        //logger
+        Logger logger = PaperPluginLogger.getLogger("TWG");
+
+        //check if applies to world
+        for (TWGWorld w : worlds) {
+
+            //null check
+            while (w.world == null) {
+                w.updateWorlds();
+            }
+
+            if (w.world.getName().equals(worldInfo.getName())) {
+                int coord;
+                if(w.vertical) {
+                    coord = x;
+                } else {
+                    coord = z;
+                }
+
+                if (coord == w.chunkCoord) {
+                    //generate divider
+                    //logger.log(Level.WARNING, "[TWG]: Generating wall at x,z:" + x + ","+ z);
+                    generateWall(chunk, w.coord, w.vertical);
+
+                }
+                break;
+            }
+        }
+    }
+
+    public void generateWall(ChunkData chunk, double coordD, boolean vert) {
+
+        int coord = (int) Math.abs(Math.floor((coordD % 16)));
+
+        //debug
+        Logger logger = PaperPluginLogger.getLogger("TWG");
+        logger.log(Level.WARNING, "min height: " + chunk.getMinHeight());
+
+        //replace air with barrier
+        if (vert) {
+            for (int i = chunk.getMinHeight(); i < chunk.getMaxHeight(); i++) {
+                for (int j = 0; j < 16; j++) {
+                    BlockData block = chunk.getBlockData(coord, i, j);
+
+                    if (block.getMaterial() == Material.AIR) {
+                        chunk.setBlock(coord, i, j, Material.ACACIA_FENCE);
+                    }
+                }
+            }
+        } else {
+            for (int i = chunk.getMinHeight(); i < chunk.getMaxHeight(); i++) {
+                for (int j = 0; j < 16; j++) {
+                    BlockData block = chunk.getBlockData(j, i, coord);
+
+                    if (block.getMaterial() == Material.AIR) {
+                        chunk.setBlock(j, i, coord, Material.ACACIA_FENCE);
+                    }
+                }
+            }
+        }
+
+    }
+
+    //Deprecated
+    public void generate(Chunk chunk, int chunkCoord, double coordD, boolean vert) {
+
+        //int min = chunkCoord * 16;
+        int coord = (int) Math.abs(Math.floor((coordD % 16)));
+
+        //replace air with barrier
+        if (vert) {
+            for (int i = 0; i < chunk.getWorld().getMaxHeight(); i++) {
+                for (int j = 0; j < 16; j++) {
+                    Block block = chunk.getBlock(coord, i, j);
+
+                    if (block.getType() == Material.AIR) {
+                        block.setType(Material.ACACIA_FENCE);
+                    }
+                }
+            }
+        } else {
+            for (int i = 0; i < chunk.getWorld().getMaxHeight(); i++) {
+                for (int j = 0; j < 16; j++) {
+                    Block block = chunk.getBlock(j, i, coord);
+
+                    if (block.getType() == Material.AIR) {
+                        block.setType(Material.ACACIA_FENCE);
+                    }
+                }
+            }
+        }
+
+    }
