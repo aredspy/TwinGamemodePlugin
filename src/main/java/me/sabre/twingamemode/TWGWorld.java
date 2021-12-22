@@ -40,7 +40,7 @@ public class TWGWorld {
     }
 
     //update world object
-    public void updateWorlds() {
+    public void updateWorld() {
         this.world = getWorld(this.name);
     }
 }

@@ -5,6 +5,7 @@ import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -21,8 +22,6 @@ import java.util.logging.Logger;
 
 public final class TwinGamemode extends JavaPlugin {
 
-    private ArrayList<TWGWorld> worlds;
-
     @Override
     public void onEnable() {
         // Plugin startup logic
@@ -31,10 +30,8 @@ public final class TwinGamemode extends JavaPlugin {
         initDirs();
 
         //init config
-        initConfig();
-
-        //init world config
-        this.worlds = initWorlds(this.getConfig());
+        this.saveDefaultConfig();
+        FileConfiguration config = this.getConfig();
 
         //init logger
         Logger logger = PaperPluginLogger.getLogger("TwinGamemode");
@@ -47,7 +44,7 @@ public final class TwinGamemode extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new NewPlayerListener(), this);
 
         //start location listener
-        getServer().getPluginManager().registerEvents(new LocationListener2(worlds, this.getConfig()), this);
+        getServer().getPluginManager().registerEvents(new LocationListener(config), this);
         
         logger.log(Level.INFO, "Has successfully started!");
     }
@@ -55,11 +52,11 @@ public final class TwinGamemode extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        PaperPluginLogger.getLogger("TWG").log(Level.INFO, "Has successfully shutdown!");
+        PaperPluginLogger.getLogger("TwinGamemode").log(Level.INFO, "Has successfully shutdown!");
     }
 
     @Override
-    public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
+    public ChunkGenerator getDefaultWorldGenerator(@NotNull String worldName, String id) {
         return new DividerGenerator(this.getConfig());
     }
 
@@ -69,13 +66,12 @@ public final class TwinGamemode extends JavaPlugin {
         File pdC = new File(FileLocs.PDC);
         File pdS = new File(FileLocs.PDS);
 
-        pdC.mkdirs();
-        pdS.mkdirs();
+        boolean made = pdC.mkdirs();
+        boolean made2 = pdS.mkdirs();
 
-    }
+        if (!made || !made2)
+            PaperPluginLogger.getLogger("TwinGamemode").log(Level.FINER, "Player save directories already created or unable to produce!");
 
-    public void initConfig() {
-        this.saveDefaultConfig();
     }
 
     public static ArrayList<TWGWorld> initWorlds(FileConfiguration config) {
@@ -106,7 +102,7 @@ public final class TwinGamemode extends JavaPlugin {
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to load config!");
-            logger.throwing("LocationListener2", "LocationListener2()", e);
+            logger.throwing("LocationListener", "LocationListener()", e);
         }
         return tworlds;
     }

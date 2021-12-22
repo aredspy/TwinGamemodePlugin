@@ -11,11 +11,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DividerPopulator extends BlockPopulator {
 
-    private ArrayList<TWGWorld> worlds;
     final private FileConfiguration config;
 
     public DividerPopulator(FileConfiguration config) {
@@ -27,14 +27,14 @@ public class DividerPopulator extends BlockPopulator {
         //logger
         Logger logger = PaperPluginLogger.getLogger("TWG");
 
-        worlds = TwinGamemode.initWorlds(this.config);
+        ArrayList<TWGWorld> worlds = TwinGamemode.initWorlds(this.config);
 
         //check if applies to world
         for (TWGWorld w : worlds) {
 
             //null check
             while (w.world == null) {
-                w.updateWorlds();
+                w.updateWorld();
             }
 
             if (w.world.getName().equals(worldInfo.getName())) {
@@ -47,7 +47,7 @@ public class DividerPopulator extends BlockPopulator {
 
                 if (coord == w.chunkCoord) {
                     //generate divider
-                    //logger.log(Level.WARNING, "[TWG]: Generating wall at x,z:" + x + ","+ z);
+                    logger.log(Level.FINEST, "Generating wall at x,z:" + x + ","+ z);
                     generateWall(worldInfo, chunk, x, z, w.coord, w.vertical);
 
                 }

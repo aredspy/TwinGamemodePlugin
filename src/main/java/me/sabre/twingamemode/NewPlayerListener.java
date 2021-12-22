@@ -52,7 +52,6 @@ public class NewPlayerListener implements Listener {
             Path copyC = Paths.get(FileLocs.PDC, savefile);
             Path copyC1 = Paths.get(FileLocs.PDC, savefile1);
 
-
             try {
                 Files.copy(save, copyS, StandardCopyOption.REPLACE_EXISTING);
                 Files.copy(save1, copyS1, StandardCopyOption.REPLACE_EXISTING);

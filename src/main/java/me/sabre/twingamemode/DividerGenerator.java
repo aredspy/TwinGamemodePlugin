@@ -4,6 +4,7 @@ import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
@@ -54,8 +55,8 @@ public class DividerGenerator extends ChunkGenerator {
     }
 
     @Override
-    public List<BlockPopulator> getDefaultPopulators(World world) {
-        return Arrays.asList((BlockPopulator)new DividerPopulator(this.config));
+    public @NotNull List<BlockPopulator> getDefaultPopulators(@NotNull World world) {
+        return Arrays.asList(new DividerPopulator(this.config));
     }
 
 }
