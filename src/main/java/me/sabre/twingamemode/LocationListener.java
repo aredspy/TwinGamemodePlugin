@@ -31,6 +31,7 @@ public class LocationListener implements Listener{
     public void onPlayerMove(PlayerMoveEvent event) {
 
         Player player = event.getPlayer();
+        GameMode mode = player.getGameMode();
         World world = player.getWorld();
         Location location = player.getLocation();
         GameMode gamemode = player.getGameMode();
@@ -50,7 +51,7 @@ public class LocationListener implements Listener{
 
             if (w.world.equals(world)) {
 
-                //check if location is in creative zone
+                //check if location is valid
                 double crossCoord;
 
                 if (w.vertical) {
@@ -59,36 +60,41 @@ public class LocationListener implements Listener{
                     crossCoord = location.getZ();
                 }
 
-                if (w.positive) {
-                    if(crossCoord < (w.coord + w.cOffset)) {
-                        if(gamemode == GameMode.CREATIVE) {
-                            //swap save
-                            swapSave(player, w, GameMode.SURVIVAL);
-                            player.setGameMode(GameMode.SURVIVAL);
-                        }
-                    }
-                    if (crossCoord > (w.coord + w.sOffset)){
-                        if (gamemode == GameMode.SURVIVAL) {
-                            //swap save
-                            swapSave(player, w, GameMode.CREATIVE);
-                            player.setGameMode(GameMode.CREATIVE);
-                        }
-                    }
-                }else {
-                    if(crossCoord > (w.coord + w.cOffset)) {
-                        if(gamemode == GameMode.CREATIVE) {
-                            //swap save
-                            swapSave(player, w, GameMode.SURVIVAL);
-                            player.setGameMode(GameMode.SURVIVAL);
+                //location offset
+                double offsetRaw = 0;
+                Location offset;
 
-                        }
+                //inverted for EXPECTED change to gamemode
+                if (mode == GameMode.SURVIVAL) {
+                    offsetRaw = w.cOffset;
+                } else if (mode == GameMode.CREATIVE) {
+                    offsetRaw = w.sOffset;
+                }
+
+                //double offset to account for gap plus small buffer
+                offsetRaw = offsetRaw * 2;
+
+                if (w.vertical) {
+                    offset = new Location(w.world, offsetRaw, 0 ,0);
+                }else {
+                    offset = new Location(w.world, 0, 0 ,offsetRaw);
+                }
+
+                //creative is on positive
+                if(crossCoord < (w.coord + w.cOffset) && crossCoord > (w.coord + w.sOffset)) {
+                    location = safeBump(location.add(offset));
+                    if (location == null) {
+                        return;
                     }
-                    if (crossCoord < (w.coord + w.sOffset)){
-                        if (gamemode == GameMode.SURVIVAL) {
-                            //swap save
-                            swapSave(player, w, GameMode.CREATIVE);
-                            player.setGameMode(GameMode.CREATIVE);
-                        }
+
+                    if (gamemode == GameMode.CREATIVE) {
+                        swapSave(player, w.world, GameMode.SURVIVAL, location);
+                        player.setGameMode(GameMode.SURVIVAL);
+                        player.sendMessage("You have entered the survival side!");
+                    } else if (gamemode == GameMode.SURVIVAL) {
+                        swapSave(player, w.world, GameMode.CREATIVE, location);
+                        player.setGameMode(GameMode.CREATIVE);
+                        player.sendMessage("You have entered the creative side!");
                     }
                 }
 
@@ -99,7 +105,7 @@ public class LocationListener implements Listener{
 
     }
 
-    private void swapSave(Player player, TWGWorld world, GameMode mode) {
+    private void swapSave(Player player, World world, GameMode mode, Location location) {
 
         //logger
         Logger logger = PaperPluginLogger.getLogger("TWG");
@@ -108,33 +114,13 @@ public class LocationListener implements Listener{
         player.saveData();
 
         //get player data location
-        World worldO = world.world;
-        String worldname = worldO.getName();
+        String worldname = world.getName();
         String uuid = player.getUniqueId().toString();
         String savefile = uuid + ".dat";
         String savefile1 = uuid + ".dat_old";
 
         Path save = Paths.get(worldname, "playerdata", savefile);
         Path save1 = Paths.get(worldname ,"playerdata", savefile1);
-
-        //location offset
-        double offsetRaw = 0;
-        Location offset;
-
-        if (mode == GameMode.CREATIVE) {
-            offsetRaw = world.cOffset;
-        } else if (mode == GameMode.SURVIVAL) {
-            offsetRaw = world.sOffset;
-        }
-
-        //double offset to account for gap
-        offsetRaw = offsetRaw * 2;
-
-        if (world.vertical) {
-            offset = new Location(worldO, offsetRaw, 0 ,0);
-        }else {
-            offset = new Location(worldO, 0, 0 ,offsetRaw);
-        }
 
         if (mode == GameMode.CREATIVE) {
 
@@ -194,13 +180,8 @@ public class LocationListener implements Listener{
 
         }
 
-        //current location + run down bumper
-        Location location = bumpDown(player.getLocation());
-        location.add(offset); //!
-
         //load new player data
         player.loadData();
-
         //teleport to original location with configured offset
         player.teleport(location);
         //zero out velocity
@@ -217,4 +198,60 @@ public class LocationListener implements Listener{
 
         return location.add(0, 1, 0);
     }
+
+    //new safe bumper accounts for adjacent blocks and does a "cocktail shake" to find best block
+    //include the offset location when calling
+    private static Location safeBump(Location location) {
+
+        boolean check = !location.getBlock().isPassable() && location.getBlock().getRelative(0, 1, 0).isPassable() && location.getBlock().getRelative(0, 2, 0).isPassable();
+        boolean lowerHit = false;
+        boolean upperHit = false;
+        Location lower = location.clone();
+        Location upper = location.clone();
+        //Logger logger = PaperPluginLogger.getLogger("TwinGamemode");
+
+        //logger.log(Level.SEVERE, "Blocks: " + location.getBlock().getType() + location.getBlock().getRelative(0,1,0).getType() + location.getBlock().getRelative(0,2,0).getType());
+
+        while(!check) {
+
+            if(lowerHit && upperHit)
+                return null;
+
+            double diffup = upper.getY() - location.getY();
+
+            if (!lowerHit)
+                lower.subtract(0,1,0);
+            if (!upperHit)
+                upper.add(0,1,0);
+
+            //logger.log(Level.WARNING, "low xyz: " + lower.getX() + " " + lower.getY() + " " + lower.getZ());
+            //logger.log(Level.WARNING, "up xyz: " + upper.getX() + " " + upper.getY() + " " + upper.getZ());
+
+            if (lower.getY() == location.getWorld().getMinHeight()) {
+                lowerHit = true;
+            }
+
+            if (diffup > 10 || upper.getY() == location.getWorld().getMaxHeight()) {
+                upperHit = true;
+            }
+
+            //logger.log(Level.SEVERE, "BLOCK: " + location.getBlock());
+            //logger.log(Level.SEVERE, "BLOCK: " + lower.getBlock());
+            //logger.log(Level.SEVERE, "BLOCK: " + upper.getBlock());
+
+            boolean check1 = !lower.getBlock().isPassable() && lower.getBlock().getRelative(0, 1, 0).isPassable() && lower.getBlock().getRelative(0, 2, 0).isPassable();
+            boolean check2 = !upper.getBlock().isPassable() && upper.getBlock().getRelative(0, 1, 0).isPassable() && upper.getBlock().getRelative(0, 2, 0).isPassable();
+
+            if (check1)
+                location = lower;
+            if (check2)
+                location = upper;
+
+            check = check1 || check2;
+            //logger.log(Level.WARNING, "Check_lower: " + check1 + " Check_upper: " + check2);
+        }
+
+        return location.add(0,1,0);
+    }
+
 }
