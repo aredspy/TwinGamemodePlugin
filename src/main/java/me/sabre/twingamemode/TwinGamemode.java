@@ -1,7 +1,5 @@
 package me.sabre.twingamemode;
 import com.destroystokyo.paper.utils.PaperPluginLogger;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.generator.ChunkGenerator;
@@ -11,8 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,7 +77,7 @@ public final class TwinGamemode extends JavaPlugin {
     }
 
     public static ArrayList<TWGWorld> initWorlds(FileConfiguration config) {
-        Logger logger =  PaperPluginLogger.getLogger("TWG");
+        Logger logger =  PaperPluginLogger.getLogger("TwinGaamemode");
         ArrayList<TWGWorld> tworlds = new ArrayList<>();
 
         ConfigurationSection sub = config.getConfigurationSection("worlds");
