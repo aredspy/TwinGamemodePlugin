@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
 
 import java.nio.file.Files;
@@ -34,7 +35,6 @@ public class LocationListener implements Listener{
         GameMode mode = player.getGameMode();
         World world = player.getWorld();
         Location location = player.getLocation();
-        GameMode gamemode = player.getGameMode();
 
         //ignore for operators
         if (player.isOp()) {
@@ -44,12 +44,7 @@ public class LocationListener implements Listener{
         //ignore if not in config worlds
         for(TWGWorld w : this.worlds) {
 
-            //null check
-            while (w.world == null) {
-                w.updateWorld();
-            }
-
-            if (w.world.equals(world)) {
+            if (w.name.equals(world.getName())) {
 
                 //check if location is valid
                 double crossCoord;
@@ -71,41 +66,92 @@ public class LocationListener implements Listener{
                     offsetRaw = w.sOffset;
                 }
 
-                //double offset to account for gap plus small buffer
+                //double offset to account for gap
                 offsetRaw = offsetRaw * 2;
 
                 if (w.vertical) {
-                    offset = new Location(w.world, offsetRaw, 0 ,0);
+                    offset = new Location(world, offsetRaw, 0 ,0);
                 }else {
-                    offset = new Location(w.world, 0, 0 ,offsetRaw);
+                    offset = new Location(world, 0, 0 ,offsetRaw);
                 }
 
-                //creative is on positive
-                if(crossCoord < (w.coord + w.cOffset) && crossCoord > (w.coord + w.sOffset)) {
-                    location = safeBump(location.add(offset));
-                    if (location == null) {
-                        return;
-                    }
+                if(w.positive) {
+                    if (crossCoord < (w.coord + w.cOffset) && crossCoord > (w.coord + w.sOffset)) {
+                        location = safeBump(location.add(offset));
+                        if (location == null) {
+                            player.sendMessage("Unable to find a suitable teleport point, try moving along the barrier");
+                            return;
+                        }
 
-                    if (gamemode == GameMode.CREATIVE) {
-                        swapSave(player, w.world, GameMode.SURVIVAL, location);
-                        player.setGameMode(GameMode.SURVIVAL);
-                        player.sendMessage("You have entered the survival side!");
-                    } else if (gamemode == GameMode.SURVIVAL) {
-                        swapSave(player, w.world, GameMode.CREATIVE, location);
+                        if (mode == GameMode.CREATIVE) {
+                            swapSave(player, w, GameMode.SURVIVAL, location);
+                            player.setGameMode(GameMode.SURVIVAL);
+                            player.sendMessage("You have entered the survival side!");
+                        } else if (mode == GameMode.SURVIVAL) {
+                            swapSave(player, w, GameMode.CREATIVE, location);
+                            player.setGameMode(GameMode.CREATIVE);
+                            player.sendMessage("You have entered the creative side!");
+                        }
+                    }
+                } else {
+                    if (crossCoord > (w.coord + w.cOffset) && crossCoord < (w.coord + w.sOffset)) {
+                        location = safeBump(location.add(offset));
+                        if (location == null) {
+                            player.sendMessage("Unable to find a suitable teleport point, try moving along the barrier");
+                            return;
+                        }
+
+                        if (mode == GameMode.CREATIVE) {
+                            swapSave(player, w, GameMode.SURVIVAL, location);
+                            player.setGameMode(GameMode.SURVIVAL);
+                            player.sendMessage("You have entered the survival side!");
+                        } else if (mode == GameMode.SURVIVAL) {
+                            swapSave(player, w, GameMode.CREATIVE, location);
+                            player.setGameMode(GameMode.CREATIVE);
+                            player.sendMessage("You have entered the creative side!");
+                        }
+                    }
+                }
+
+                //enforce gamemode check
+                if(w.positive) {
+                    if (crossCoord > w.coord && mode == GameMode.SURVIVAL) {
+                        swapSave(player, w, GameMode.CREATIVE, location);
                         player.setGameMode(GameMode.CREATIVE);
-                        player.sendMessage("You have entered the creative side!");
+                    } else if (crossCoord < w.coord && mode == GameMode.CREATIVE) {
+                        swapSave(player, w, GameMode.SURVIVAL, location);
+                        player.setGameMode(GameMode.SURVIVAL);
+                    }
+                }else {
+                    if (crossCoord < w.coord && mode == GameMode.SURVIVAL) {
+                        swapSave(player, w, GameMode.CREATIVE, location);
+                        player.setGameMode(GameMode.CREATIVE);
+                    } else if (crossCoord > w.coord && mode == GameMode.CREATIVE) {
+                        swapSave(player, w, GameMode.SURVIVAL, location);
+                        player.setGameMode(GameMode.SURVIVAL);
                     }
                 }
 
                 //to skip rest of world checks
-                break;
+                return;
             }
+        }
+
+        //if not in worlds, enforce default
+
+        //enforce default gamemode
+        GameMode def = player.getServer().getDefaultGameMode();
+
+        if(mode != def) {
+            TWGWorld temp = new TWGWorld(world.getName(), 0, 0, false, false);
+            swapSave(player, temp, def, location);
+            player.setGameMode(def);
         }
 
     }
 
-    private void swapSave(Player player, World world, GameMode mode, Location location) {
+    //swaps save files
+    private void swapSave(Player player, TWGWorld world, GameMode mode, Location location) {
 
         //logger
         Logger logger = PaperPluginLogger.getLogger("TWG");
@@ -114,7 +160,7 @@ public class LocationListener implements Listener{
         player.saveData();
 
         //get player data location
-        String worldname = world.getName();
+        String worldname = world.savename;
         String uuid = player.getUniqueId().toString();
         String savefile = uuid + ".dat";
         String savefile1 = uuid + ".dat_old";
@@ -182,28 +228,25 @@ public class LocationListener implements Listener{
 
         //load new player data
         player.loadData();
+        //remove effects
+        removeEffects(player);
         //teleport to original location with configured offset
         player.teleport(location);
         //zero out velocity
         player.setVelocity(new Vector(0,0,0));
     }
 
-    //bump players down to the nearest vertical block
-    private static Location bumpDown(Location location) {
-        for (double y = location.getY(); y > 0; y--) {
-            if (location.subtract(0, 1, 0).getBlock().getType() == Material.AIR)
-                continue;
-            break;
-        }
-
-        return location.add(0, 1, 0);
+    //removes all potion effects from player
+    private void removeEffects(Player player) {
+        for (PotionEffect effect : player.getActivePotionEffects())
+            player.removePotionEffect(effect.getType());
     }
 
     //new safe bumper accounts for adjacent blocks and does a "cocktail shake" to find best block
     //include the offset location when calling
     private static Location safeBump(Location location) {
 
-        boolean check = !location.getBlock().isPassable() && location.getBlock().getRelative(0, 1, 0).isPassable() && location.getBlock().getRelative(0, 2, 0).isPassable();
+        boolean check = location.getBlock().getType().getHardness() >= 0.1 && location.getBlock().getRelative(0, 1, 0).isPassable() && location.getBlock().getRelative(0, 2, 0).isPassable();
         boolean lowerHit = false;
         boolean upperHit = false;
         Location lower = location.clone();
@@ -239,8 +282,8 @@ public class LocationListener implements Listener{
             //logger.log(Level.SEVERE, "BLOCK: " + lower.getBlock());
             //logger.log(Level.SEVERE, "BLOCK: " + upper.getBlock());
 
-            boolean check1 = !lower.getBlock().isPassable() && lower.getBlock().getRelative(0, 1, 0).isPassable() && lower.getBlock().getRelative(0, 2, 0).isPassable();
-            boolean check2 = !upper.getBlock().isPassable() && upper.getBlock().getRelative(0, 1, 0).isPassable() && upper.getBlock().getRelative(0, 2, 0).isPassable();
+            boolean check1 = lower.getBlock().getType().getHardness() >= 0.1 && lower.getBlock().getRelative(0, 1, 0).isPassable() && lower.getBlock().getRelative(0, 2, 0).isPassable();
+            boolean check2 = upper.getBlock().getType().getHardness() >= 0.1 && upper.getBlock().getRelative(0, 1, 0).isPassable() && upper.getBlock().getRelative(0, 2, 0).isPassable();
 
             if (check1)
                 location = lower;

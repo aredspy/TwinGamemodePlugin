@@ -16,28 +16,21 @@ import java.util.logging.Logger;
 
 public class DividerPopulator extends BlockPopulator {
 
-    final private FileConfiguration config;
+    final private ArrayList<TWGWorld> worlds;
 
     public DividerPopulator(FileConfiguration config) {
-        this.config = config;
+        this.worlds = TwinGamemode.initWorlds(config);
     }
 
     @Override
     public void populate(@NotNull WorldInfo worldInfo, @NotNull Random random, int x, int z, @NotNull LimitedRegion chunk) {
         //logger
-        Logger logger = PaperPluginLogger.getLogger("TWG");
-
-        ArrayList<TWGWorld> worlds = TwinGamemode.initWorlds(this.config);
+        //Logger logger = PaperPluginLogger.getLogger("TWG");
 
         //check if applies to world
-        for (TWGWorld w : worlds) {
+        for (TWGWorld w : this.worlds) {
 
-            //null check
-            while (w.world == null) {
-                w.updateWorld();
-            }
-
-            if (w.world.getName().equals(worldInfo.getName())) {
+            if (w.name.equals(worldInfo.getName())) {
                 int coord;
                 if(w.vertical) {
                     coord = x;
@@ -47,7 +40,7 @@ public class DividerPopulator extends BlockPopulator {
 
                 if (coord == w.chunkCoord) {
                     //generate divider
-                    logger.log(Level.FINEST, "Generating wall at x,z:" + x + ","+ z);
+                    //logger.log(Level.WARNING, "Generating wall at x,z:" + x + ","+ z + " for " + w.name);
                     generateWall(worldInfo, chunk, x, z, w.coord, w.vertical);
 
                 }

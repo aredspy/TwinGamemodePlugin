@@ -2,15 +2,18 @@ package me.sabre.twingamemode;
 import com.destroystokyo.paper.utils.PaperPluginLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +29,10 @@ public final class TwinGamemode extends JavaPlugin {
     public void onEnable() {
         // Plugin startup logic
 
+        //init logger
+        Logger logger = PaperPluginLogger.getLogger("TwinGamemode");
+        logger.setLevel(Level.FINER);
+
         //init dirs
         initDirs();
 
@@ -33,12 +40,11 @@ public final class TwinGamemode extends JavaPlugin {
         this.saveDefaultConfig();
         FileConfiguration config = this.getConfig();
 
-        //init logger
-        Logger logger = PaperPluginLogger.getLogger("TwinGamemode");
-        logger.setLevel(Level.FINER);
-
         //register command
         this.getCommand("twg_generate").setExecutor(new TWGenerateWall());
+
+        //start new world listener
+        //getServer().getPluginManager().registerEvents(new WorldInitListener(config), this);
 
         //start new player listener
         getServer().getPluginManager().registerEvents(new NewPlayerListener(), this);
@@ -56,7 +62,7 @@ public final class TwinGamemode extends JavaPlugin {
     }
 
     @Override
-    public ChunkGenerator getDefaultWorldGenerator(@NotNull String worldName, String id) {
+    public ChunkGenerator getDefaultWorldGenerator(@NotNull String worldName, @Nullable String id) {
         return new DividerGenerator(this.getConfig());
     }
 
@@ -76,34 +82,22 @@ public final class TwinGamemode extends JavaPlugin {
 
     public static ArrayList<TWGWorld> initWorlds(FileConfiguration config) {
         Logger logger =  PaperPluginLogger.getLogger("TWG");
-
-        //init worlds
         ArrayList<TWGWorld> tworlds = new ArrayList<>();
-        List<Map<?,?>> worlds = config.getMapList("worlds");
 
-        try {
+        ConfigurationSection sub = config.getConfigurationSection("worlds");
+        Set<String> worlds = sub.getKeys(false);
 
-            for (Map<?, ?> map : worlds) {
-                Map<String, ?> world = (Map<String, ?>) map.get("level");
-                String worldname = (String) world.get("name");
+        for (String world : worlds) {
+            boolean vert = sub.getString(world + ".divider.type").equals("vertical");
+            boolean cpos = sub.getString(world + ".divider.creative").equals("positive");
+            double coord = sub.getDouble(world + ".divider.coord");
+            double offset = sub.getDouble(world + ".divider.offset");
 
-                Map<String, ?> divider = (Map<String, ?>) world.get("divider");
-                double coord = (double) divider.get("coord");
-                double offset = (double) divider.get("offset");
-                boolean vert = divider.get("type").equals("vertical");
-                boolean cpos = divider.get("creative").equals("positive");
-
-                World worldObj = Bukkit.getWorld(worldname);
-
-                TWGWorld worldW = new TWGWorld(worldObj, worldname, coord, offset, vert, cpos);
-                tworlds.add(worldW);
-
-            }
-
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to load config!");
-            logger.throwing("LocationListener", "LocationListener()", e);
+            TWGWorld worldW = new TWGWorld(world, coord, offset, vert, cpos);
+            tworlds.add(worldW);
         }
+
         return tworlds;
     }
+
 }

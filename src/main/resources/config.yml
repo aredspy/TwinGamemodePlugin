@@ -1,9 +1,16 @@
 # TwinGamemode config file
 
+#NOTE: You must also add worlds to the bukkit.yml to allow the server
+# to generate the divider
+#
+# Example:
+# worlds:
+#  world:
+#   generator: TwinGamemode
+
 #list of worlds to apply divider and game mode changers
 worlds:
-  - level:
-      name: "world"
+  world:
       divider:
         #options: vertical (east-west) | horizontal (north south)
         type: vertical
@@ -12,9 +19,8 @@ worlds:
         #options: positive (east or south) | negative (west or north)
         creative: positive
         #offset when player changes game mode
-        offset: 0.0
-  - level:
-      name: "world_nether"
+        offset: 1.0
+  world_nether:
       divider:
         #options: vertical (east-west) | horizontal (north south)
         type: vertical
@@ -23,6 +29,6 @@ worlds:
         #options: positive (east or south) | negative (west or north)
         creative: positive
         #offset when player changes game mode
-        offset: 0.0
+        offset: 1.0
 
 
